@@ -1,22 +1,25 @@
-var crypto = require('crypto');
-var request = require('request');
-var pool = require('../lib/mysql');
+const crypto = require('crypto');
+const request = require('request');
+const pool = require('../lib/mysql');
 
 //md5加密
-var md5 = function (text) {
+let md5 = function (text) {
     return crypto.createHash('md5').update(text).digest('hex')
 };
+let getSha1 = function (text) {
+    return crypto.createHash('sha1').update(text).digest('hex')
+};
 //加密
-var encrypt = function (text) {
+let encrypt = function (text) {
     return md5(md5(text));
 };
 // 格式2位数字
-var format = function (param) {
+let format = function (param) {
     return (parseInt(param) < 10) ? '0' + param : param;
 };
 
 //执行sql语句 param:{sql:'',option:''}
-var execSql = function (param, cb) {
+let execSql = function (param, cb) {
     pool.getConnection(function (err, connection) {
         if (err) {
             return cb(err);
@@ -36,7 +39,7 @@ var execSql = function (param, cb) {
 };
 
 // 秒转时间
-var second2Time = function (second) {
+let second2Time = function (second) {
     let s = parseInt(second);
     let t = '00:00:00';
     if (s > 0) {
@@ -71,12 +74,26 @@ let getRequest = function (url, cb) {
     });
 };
 
+let checkSignature = function(signature, timestamp, nonce){
+    let token = 'wujinfeng2017';
+    let arr = [token, timestamp, nonce];
+    console.log('arr1:'+arr)
+    arr.sort();
+    console.log('arr2:'+arr)
+    let content = arr.join('');
+    console.log('content:'+content)
+    let temp = getSha1(content);
+    return temp === signature;
+};
+
+
 //导出
 module.exports = {
     encrypt: encrypt,
     format: format,
     second2Time: second2Time,
     execSql: execSql,
-    getRequest: getRequest
+    getRequest: getRequest,
+    checkSignature: checkSignature
 };
 

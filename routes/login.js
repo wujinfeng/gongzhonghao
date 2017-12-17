@@ -9,11 +9,11 @@ router.use(function (req, res, next) {
     next();
 });
 
-// get 主页
-router.get('/', function (req, res) {
-    res.render('index');
-});
 
+// get
+router.get('/', function (req, res) {
+    res.send('error');
+});
 
 
 module.exports = router;
