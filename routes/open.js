@@ -37,71 +37,38 @@ router.get('/open', function (req, res) {
     let nonce = req.query.nonce;
     let echostr = req.query.echostr;
 
-    if(comm.checkSignature(signature,timestamp,nonce)){
+    if (comm.checkSignature(signature, timestamp, nonce)) {
         res.send(echostr);
-    }else{
+    } else {
         res.send('error');
     }
 });
 
 // post
-router.post('/open', function (req, res) {
+router.post('/open', comm.reqData, function (req, res, next) {
     console.log('post /open');
-    let buffer = [];
-    req.setEncoding('utf8');
-    req.on('data', function (chunk) {
-        buffer.push(chunk);
-    });
-    req.on('end', function () {
-        let xmlStr = buffer.join();
-        xml2js.parseString(xmlStr, {explicitArray : false}, function (err, result) {
-            if(err){
-                return res.send('success');  // 假如服务器无法保证在五秒内处理回复，则必须回复“success”或者“”（空串），否则微信后台会发起三次重试。
-            }
-            let resultXmlObj = result.xml;
-            if (resultXmlObj.MsgType === 'text') {
-                let returnContent = resultXmlObj.Content;
-                if(resultXmlObj.Content === '1'){
-                    returnContent = '你好';
-                }else if(resultXmlObj.Content === '2'){
-                    returnContent = '吃饭了吗？';
-                }else if(resultXmlObj.Content === '?' || resultXmlObj.Content === '？'){
-                    returnContent = '请回复1，2，?';
-                }else{
-                    returnContent = '请回复1，2，?';
-                }
-                let obj = {
-                    ToUserName: resultXmlObj.FromUserName,
-                    FromUserName: resultXmlObj.ToUserName,
-                    CreateTime: new Date().getTime(),
-                    MsgType: 'text',
-                    Content: returnContent
-                };
-                let builder = new xml2js.Builder({rootName:'xml'});
-                let xml = builder.buildObject(obj);
-                console.log(xml)
-                res.send(xml);
-            } else if(resultXmlObj.MsgType === MESSAGE_EVENT) {
-                if (resultXmlObj.Event = MESSAGE_EVENT_SUBSCRIBE){
-                    let obj = {
-                        ToUserName: resultXmlObj.FromUserName,
-                        FromUserName: resultXmlObj.ToUserName,
-                        CreateTime: new Date().getTime(),
-                        MsgType: MESSAGE_TEXT,
-                        Content: '欢迎关注我'
-                    };
-                    let builder = new xml2js.Builder({rootName:'xml'});
-                    let xml = builder.buildObject(obj);
-                    console.log(xml);
-                    res.send(xml);
-                }else {
-                    res.send('success');
-                }
-
+    let xmlStr = req.body.reqStreamData;
+    console.log(xmlStr);
+    xml2js.parseString(xmlStr, {explicitArray: false}, function (err, result) {
+        if (err) {
+            return res.send('success');  // 假如服务器无法保证在五秒内处理回复，则必须回复“success”或者“”（空串），否则微信后台会发起三次重试。
+        }
+        let resultXmlObj = result.xml;
+        if (resultXmlObj.MsgType === MESSAGE_TEXT) {
+            let returnXMl = comm.messageText(resultXmlObj);
+            console.log(returnXMl);
+            res.send(returnXMl);
+        } else if (resultXmlObj.MsgType === MESSAGE_EVENT) {
+            if (resultXmlObj.Event === MESSAGE_EVENT_SUBSCRIBE) {
+                let returnXMl = comm.messageSubscribe(resultXmlObj);
+                console.log(returnXMl);
+                res.send(returnXMl);
             } else {
                 res.send('success');
             }
-        });
+        } else {
+            res.send('success');
+        }
     });
 });
 

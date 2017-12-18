@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const request = require('request');
 const pool = require('../lib/mysql');
+let xml2js = require('xml2js');
 
 //md5加密
 let md5 = function (text) {
@@ -74,16 +75,88 @@ let getRequest = function (url, cb) {
     });
 };
 
-let checkSignature = function(signature, timestamp, nonce){
+let checkSignature = function (signature, timestamp, nonce) {
     let token = 'wujinfeng2017';
     let arr = [token, timestamp, nonce];
-    console.log('arr1:'+arr)
+    console.log('arr1:' + arr)
     arr.sort();
-    console.log('arr2:'+arr)
+    console.log('arr2:' + arr)
     let content = arr.join('');
-    console.log('content:'+content)
+    console.log('content:' + content)
     let temp = getSha1(content);
     return temp === signature;
+};
+
+// 接收流数据
+let reqData = function (req, res, next) {
+    let buffer = [];
+    req.setEncoding('utf8');
+    req.on('data', function (chunk) {
+        buffer.push(chunk);
+    });
+    req.on('end', function () {
+        req.body.reqStreamData = buffer.join();
+        next();
+    });
+};
+
+// 文本消息
+let messageText = function (resultXmlObj) {
+    let returnContent = resultXmlObj.Content;
+    if (resultXmlObj.Content === '1') {
+        returnContent = '你好';
+    } else if (resultXmlObj.Content === '2') {
+        return messageNews(resultXmlObj);
+    } else if (resultXmlObj.Content === '?' || resultXmlObj.Content === '？') {
+        returnContent = '请回复1，2，?';
+    } else {
+        returnContent = '请回复1，2，?';
+    }
+    let obj = {
+        ToUserName: resultXmlObj.FromUserName,
+        FromUserName: resultXmlObj.ToUserName,
+        CreateTime: new Date().getTime(),
+        MsgType: 'text',
+        Content: returnContent
+    };
+    let builder = new xml2js.Builder({rootName: 'xml'});
+    let xml = builder.buildObject(obj);
+    return xml;
+};
+// 第一次订阅消息
+let messageSubscribe = function (resultXmlObj) {
+    let obj = {
+        ToUserName: resultXmlObj.FromUserName,
+        FromUserName: resultXmlObj.ToUserName,
+        CreateTime: new Date().getTime(),
+        MsgType: 'text',
+        Content: '欢迎关注我'
+    };
+    let builder = new xml2js.Builder({rootName: 'xml'});
+    let xml = builder.buildObject(obj);
+    return xml;
+};
+
+// 被动回复用户消息 回复图文消息
+let messageNews = function (resultXmlObj) {
+    let item = {
+        Title: '标题',
+        Description: '描述',
+        PicUrl: 'http://img05.tooopen.com/images/20140326/sy_57640132134.jpg',
+        Url: 'http://baidu.com',
+    };
+    let itemArr = [item, item, item];
+    let obj = {
+        ToUserName: resultXmlObj.FromUserName,
+        FromUserName: resultXmlObj.ToUserName,
+        CreateTime: new Date().getTime(),
+        MsgType: 'news',
+        ArticleCount: itemArr.length,
+        Articles: {item: itemArr}
+    };
+    let builder = new xml2js.Builder({rootName: 'xml'});
+    let xml = builder.buildObject(obj);
+    return xml;
 };
 
 
@@ -94,6 +167,9 @@ module.exports = {
     second2Time: second2Time,
     execSql: execSql,
     getRequest: getRequest,
-    checkSignature: checkSignature
+    checkSignature: checkSignature,
+    reqData: reqData,
+    messageText: messageText,
+    messageSubscribe: messageSubscribe
 };
 
