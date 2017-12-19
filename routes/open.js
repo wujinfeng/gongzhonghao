@@ -2,6 +2,7 @@ let express = require('express');
 let router = express.Router();
 let config = require('../config/config');
 let comm = require('../middlewares/comm');
+let wxUtil = require('../middlewares/wxUtil');
 let logger = config.logger;
 let xml2js = require('xml2js');
 
@@ -37,7 +38,7 @@ router.get('/open', function (req, res) {
     let nonce = req.query.nonce;
     let echostr = req.query.echostr;
 
-    if (comm.checkSignature(signature, timestamp, nonce)) {
+    if (wxUtil.checkSignature(signature, timestamp, nonce)) {
         res.send(echostr);
     } else {
         res.send('error');
@@ -55,12 +56,12 @@ router.post('/open', comm.reqData, function (req, res, next) {
         }
         let resultXmlObj = result.xml;
         if (resultXmlObj.MsgType === MESSAGE_TEXT) {
-            let returnXMl = comm.messageText(resultXmlObj);
+            let returnXMl = wxUtil.messageText(resultXmlObj);
             console.log(returnXMl);
             res.send(returnXMl);
         } else if (resultXmlObj.MsgType === MESSAGE_EVENT) {
             if (resultXmlObj.Event === MESSAGE_EVENT_SUBSCRIBE) {
-                let returnXMl = comm.messageSubscribe(resultXmlObj);
+                let returnXMl = wxUtil.messageSubscribe(resultXmlObj);
                 console.log(returnXMl);
                 res.send(returnXMl);
             } else {
