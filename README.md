@@ -2,7 +2,7 @@
 微信公众号
 
 在config添加微信配置文件 wxConfig.js
-·
+```
 // 微信配置
  const wxConfig = {
      AppID: 'dfgdfgd',
@@ -14,4 +14,5 @@
  };
 
  module.exports = wxConfig; 
-·
+ ```
+
