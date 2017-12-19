@@ -58,4 +58,4 @@ typings/
 .env
 # webstorm
 .idea
-config/wxConfig.js
+wxConfig.js
