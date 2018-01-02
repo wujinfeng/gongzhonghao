@@ -1,4 +1,7 @@
 const comm = require('./comm');
+const fs = require('fs');
+const path = require('path');
+const request = require('request');
 const logger = require('../config/config').logger;
 const xml2js = require('xml2js');
 const wxConfig = require('../config/wxConfig');
@@ -24,10 +27,12 @@ let messageText = function (resultXmlObj) {
         returnContent = '你好';
     } else if (resultXmlObj.Content === '2') {
         return messageNews(resultXmlObj);
+    } else if (resultXmlObj.Content === '3') {
+        return messageImage(resultXmlObj);
     } else if (resultXmlObj.Content === '?' || resultXmlObj.Content === '？') {
-        returnContent = '请回复1，2，?';
+        returnContent = '请回复1，2，3?';
     } else {
-        returnContent = '请回复1，2，?';
+        returnContent = '请回复1，2，3?';
     }
     let obj = {
         ToUserName: resultXmlObj.FromUserName,
@@ -55,7 +60,7 @@ let messageSubscribe = function (resultXmlObj) {
     return xml;
 };
 
-// 回复图文消息
+// 被动回复用户消息 回复图文消息
 let messageNews = function (resultXmlObj) {
     let item = {
         Title: '标题',
@@ -75,6 +80,80 @@ let messageNews = function (resultXmlObj) {
     let builder = new xml2js.Builder({rootName: 'xml'});
     let xml = builder.buildObject(obj);
     return xml;
+};
+
+
+// 被动回复用户消息 回复图片消息
+let messageImage = function (resultXmlObj) {
+    let obj = {
+        ToUserName: resultXmlObj.FromUserName,
+        FromUserName: resultXmlObj.ToUserName,
+        CreateTime: Math.round(new Date().getTime()/1000),
+        MsgType: 'image',
+        Image:{
+            MediaId: '8d3qCFs_yHW__HDcZFS4hJLoQ6iRU5Et86X2cNcslvz28iJHvGcPtLMBOoPDPjFw'
+        }
+    };
+    let builder = new xml2js.Builder({rootName: 'xml'});
+    let xml = builder.buildObject(obj);
+    return xml;
+};
+
+
+// 被动回复用户消息 回复语音消息
+let messageVoice = function (resultXmlObj) {
+    let obj = {
+        ToUserName: resultXmlObj.FromUserName,
+        FromUserName: resultXmlObj.ToUserName,
+        CreateTime: new Date().getTime(),
+        MsgType: 'voice',
+        MediaId: ''
+    };
+    let builder = new xml2js.Builder({rootName: 'xml'});
+    let xml = builder.buildObject(obj);
+    return xml;
+};
+
+// 被动回复用户消息 回复音乐消息
+let messageMusic = function (resultXmlObj) {
+    let obj = {
+        ToUserName: resultXmlObj.FromUserName,
+        FromUserName: resultXmlObj.ToUserName,
+        CreateTime: new Date().getTime(),
+        MsgType: 'music',
+        Music: {
+            Title: '',
+            Description: '',
+            MusicURL: '',
+            HQMusicUrl: '',
+            ThumbMediaId: ''
+        }
+    };
+    let builder = new xml2js.Builder({rootName: 'xml'});
+    let xml = builder.buildObject(obj);
+    return xml;
+};
+
+// 上传临时素材
+let mediaUploadTemp = function () {
+    let ACCESS_TOKEN = _accessToken.access_token;
+    let data = '';
+    let url = wxConfig.mediaUploadTemp + 'access_token=' + ACCESS_TOKEN + '&type=image';
+
+    var formData = {
+        // Pass a simple key-value pair
+        my_field: 'my_value',
+        // Pass data via Buffers
+        my_buffer: new Buffer([1, 2, 3]),
+        // Pass data via Streams
+        my_file: fs.createReadStream(path.join(__dirname , '../public/img/imooc.png'))
+    };
+    request.post({url: url, formData: formData}, function optionalCallback(err, httpResponse, body) {
+        if (err) {
+            return console.error('upload failed:', err);
+        }
+        console.log('Upload successful!  Server responded with:', body);
+    });
 };
 
 // 获取access_token
@@ -121,6 +200,7 @@ _getAccessToken((err, obj) => {
         _accessToken = obj;
         logger.info('程序启动获取_accessToken:ok');
         _timeoutRefresh();
+       // mediaUploadTemp();
     }
 });
 
@@ -129,10 +209,13 @@ let myToken = function () {
     return _accessToken.access_token;
 };
 
+
+
 module.exports = {
     checkSignature: checkSignature,
     messageText: messageText,
     messageNews: messageNews,
+    messageImage: messageImage,
     messageSubscribe: messageSubscribe,
     getAccessToken: myToken
 };
