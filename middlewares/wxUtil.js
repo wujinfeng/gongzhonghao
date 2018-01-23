@@ -156,6 +156,56 @@ let mediaUploadTemp = function () {
     });
 };
 
+
+// 组装 菜单
+let initMenu = function () {
+    let clickBtn11 = {
+        "type":"click",
+        "name":"今日歌曲",
+        "key":"11"
+    };
+    let viewBtn21 = {
+        "type":"view",
+        "name":"vie搜索",
+        "url":"http://www.soso.com/"
+    };
+    let clickBtn31 = {
+        "type":"scancode_push",
+        "name":"扫码事件",
+        "key":"31",
+    };
+    let clickBtn32 = {
+        "type":"location_select",
+        "name":"地理位置",
+        "key":"32",
+    };
+    let btn3 =  {
+        "name":"菜单",
+        "sub_button":[clickBtn31, clickBtn32]
+    };
+
+    let menu =  {
+        "button":[clickBtn11,viewBtn21,btn3]
+    };
+    return menu;
+};
+
+let createMenu = function(token, menu){
+    let url = wxConfig.createMenuURL+token;
+    comm.postRequest(url, menu, (err, doc)=>{
+        if(err){
+            console.log('创建菜单出错');
+            console.log(err);
+        }else{
+            if(doc.errcode === 0){
+                console.log('创建菜单成功')
+            }else{
+                console.log('创建菜单失败'+doc.errcode+','+doc.errmsg);
+            }
+        }
+    });
+};
+
 // 获取access_token
 let _getAccessToken = function (cb) {
     comm.getRequest(wxConfig.accessTokenUrl(), function (err, obj) {
@@ -201,6 +251,7 @@ _getAccessToken((err, obj) => {
         logger.info('程序启动获取_accessToken:ok');
         _timeoutRefresh();
        // mediaUploadTemp();
+        createMenu(_accessToken.access_token, initMenu())
     }
 });
 
@@ -208,6 +259,8 @@ _getAccessToken((err, obj) => {
 let myToken = function () {
     return _accessToken.access_token;
 };
+
+
 
 
 
