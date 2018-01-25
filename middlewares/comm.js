@@ -84,6 +84,7 @@ let reqData = function (req, res, next) {
 
 
 module.exports = {
+    md5:md5,
     encrypt: encrypt,
     getSha1: getSha1,
     format: format,

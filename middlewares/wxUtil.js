@@ -248,7 +248,6 @@ _getAccessToken((err, obj) => {
         _accessToken = obj;
         logger.info('程序启动获取_accessToken:ok');
         console.log(_accessToken)
-        console.log(initMenu())
         _timeoutRefresh();
        // mediaUploadTemp();
        // createMenu(_accessToken.access_token, initMenu())
@@ -331,6 +330,42 @@ let deleteMenu = function(token){
         }
     });
 };
+
+
+// 百度翻译接口
+let translate = function (source) {
+    let id = wxConfig.baiduAppId;
+    let secret = wxConfig.baiduSecret;
+    let q = source;
+    let from = 'en';
+    let to = 'zh';
+    let salt = (new Date).getTime();
+    let str1 = id + q + salt + secret;
+    console.log(str1)
+    let sign = comm.md5(str1);
+    let url = `${wxConfig.baiduTranslateURL}?q=${encodeURIComponent(q)}&appid=${id}&salt=${salt}&from=${from}&to=${to}&sign=${sign}`;
+    console.log(url);
+    comm.getRequest(url, (err, doc)=>{
+        if(err){
+            console.log('翻译出错');
+            console.log(err);
+        }else{
+            console.log(doc)
+            if(doc.error_code){
+                console.log('翻译出错'+doc.error_code+doc.error_msg);
+            }else{
+                console.log('翻译ok');
+                let trans_result = doc.trans_result;
+                let dst = trans_result[0].dst;
+                console.log(dst)
+            }
+        }
+    })
+}
+// translate('app');
+
+
+
 
 
 module.exports = {
