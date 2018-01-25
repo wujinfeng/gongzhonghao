@@ -25,7 +25,7 @@ const MESSAGE_EVENT_UNSUBSCRIBE = 'unsubscribe'; // 取消订阅
 const MESSAGE_EVENT_LOCATION = 'LOCATION';  // 上报地理位置事件
 const MESSAGE_EVENT_CLICK = 'CLICK';        // 点击菜单拉取消息时的事件推送
 const MESSAGE_EVENT_VIEW = 'VIEW';          // 点击菜单跳转链接时的事件推送
-
+const MESSAGE_EVENT_SCANCODE = 'scancode_push'; // 扫码事件
 
 /**
  * 开启公众号开发者模式
@@ -60,14 +60,34 @@ router.post('/open', comm.reqData, function (req, res, next) {
             console.log(returnXMl);
             res.send(returnXMl);
         } else if (resultXmlObj.MsgType === MESSAGE_EVENT) {
-            if (resultXmlObj.Event === MESSAGE_EVENT_SUBSCRIBE) {
+            let eventType = resultXmlObj.Event;
+            if (eventType === MESSAGE_EVENT_SUBSCRIBE) {
                 let returnXMl = wxUtil.messageSubscribe(resultXmlObj);
+                console.log(returnXMl);
+                res.send(returnXMl);
+            } else if (eventType === MESSAGE_EVENT_CLICK) {
+                let returnXMl = wxUtil.messageText(resultXmlObj);
+                console.log(returnXMl);
+                res.send(returnXMl);
+            } else if (eventType === MESSAGE_EVENT_VIEW) {
+                let url = resultXmlObj['EventKey'];
+                let returnXMl = wxUtil.messageView(resultXmlObj, url);
+                console.log(returnXMl);
+                res.send(returnXMl);
+            } else if (eventType === MESSAGE_EVENT_SCANCODE) {
+                let key = resultXmlObj.get['EventKey'];
+                let returnXMl = wxUtil.messageScancode(resultXmlObj, key);
                 console.log(returnXMl);
                 res.send(returnXMl);
             } else {
                 res.send('success');
             }
-        } else {
+        } else if (resultXmlObj.MsgType === MESSAGE_LOCATION) {
+            let label = resultXmlObj['Label'];
+            let returnXMl = wxUtil.messageLocation(resultXmlObj, label);
+            console.log(returnXMl);
+            res.send(returnXMl);
+        }else {
             res.send('success');
         }
     });

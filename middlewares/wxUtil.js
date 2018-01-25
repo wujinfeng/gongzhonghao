@@ -251,7 +251,9 @@ _getAccessToken((err, obj) => {
         console.log(initMenu())
         _timeoutRefresh();
        // mediaUploadTemp();
-        createMenu(_accessToken.access_token, initMenu())
+       // createMenu(_accessToken.access_token, initMenu())
+       // queryMenu(_accessToken.access_token)
+       // deleteMenu(_accessToken.access_token)
     }
 });
 
@@ -259,9 +261,76 @@ _getAccessToken((err, obj) => {
 let myToken = function () {
     return _accessToken.access_token;
 };
+// 视图url跳转信息
+let messageView = function (resultXmlObj,url) {
+    let obj = {
+        ToUserName: resultXmlObj.FromUserName,
+        FromUserName: resultXmlObj.ToUserName,
+        CreateTime: new Date().getTime(),
+        MsgType: 'text',
+        Content: url
+    };
+    let builder = new xml2js.Builder({rootName: 'xml'});
+    let xml = builder.buildObject(obj);
+    return xml;
+};
+// 扫码信息
+let messageScancode = function (resultXmlObj,key) {
+    let obj = {
+        ToUserName: resultXmlObj.FromUserName,
+        FromUserName: resultXmlObj.ToUserName,
+        CreateTime: new Date().getTime(),
+        MsgType: 'text',
+        Content: key
+    };
+    let builder = new xml2js.Builder({rootName: 'xml'});
+    let xml = builder.buildObject(obj);
+    return xml;
+};
+// 位置信息
+let messageLocation = function (resultXmlObj, label){
+    let obj = {
+        ToUserName: resultXmlObj.FromUserName,
+        FromUserName: resultXmlObj.ToUserName,
+        CreateTime: new Date().getTime(),
+        MsgType: 'text',
+        Content: label
+    };
+    let builder = new xml2js.Builder({rootName: 'xml'});
+    let xml = builder.buildObject(obj);
+    return xml;
+};
 
+// 查询菜单
+let queryMenu= function(token){
+    let url = wxConfig.getMenuURL+token;
+    comm.getRequest(url, (err, doc)=>{
+        if(err){
+            console.log('查询菜单出错');
+            console.log(err);
+        }else{
+            console.log('菜单')
+            console.log(JSON.stringify(doc))
+        }
+    });
+};
 
-
+// 删除菜单
+let deleteMenu = function(token){
+    let url = wxConfig.delMenuURL+token;
+    comm.getRequest(url, (err, doc)=>{
+        if(err){
+            console.log('删除菜单出错');
+            console.log(err);
+        }else{
+            if(doc.errcode === 0){
+                console.log('删除菜单成功')
+            }else{
+                console.log('删除菜单失败'+doc.errcode+','+doc.errmsg);
+            }
+        }
+    });
+};
 
 
 module.exports = {
@@ -270,5 +339,8 @@ module.exports = {
     messageNews: messageNews,
     messageImage: messageImage,
     messageSubscribe: messageSubscribe,
+    messageView: messageView,
+    messageScancode: messageScancode,
+    messageLocation: messageLocation,
     getAccessToken: myToken
 };
