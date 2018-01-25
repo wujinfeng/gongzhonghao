@@ -184,10 +184,8 @@ let initMenu = function () {
         "sub_button":[clickBtn31, clickBtn32]
     };
 
-    let menu =  {
-        "button":[clickBtn11,viewBtn21,btn3]
-    };
-    return menu;
+    let menu =  {button:[clickBtn11,viewBtn21,btn3]};
+    return JSON.stringify(menu);
 };
 
 let createMenu = function(token, menu){
@@ -249,6 +247,8 @@ _getAccessToken((err, obj) => {
     } else {
         _accessToken = obj;
         logger.info('程序启动获取_accessToken:ok');
+        console.log(_accessToken)
+        console.log(initMenu())
         _timeoutRefresh();
        // mediaUploadTemp();
         createMenu(_accessToken.access_token, initMenu())
