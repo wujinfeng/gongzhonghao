@@ -21,7 +21,7 @@ let checkSignature = function (signature, timestamp, nonce) {
 };
 
 // 文本消息
-let messageText = function (resultXmlObj) {
+let messageText = async function (resultXmlObj) {
     let returnContent = resultXmlObj.Content;
     if (resultXmlObj.Content === '1') {
         returnContent = '你好';
@@ -36,7 +36,9 @@ let messageText = function (resultXmlObj) {
     } else if (/^翻译/.test(resultXmlObj.Content)) {
         // 异步的返回不成功
         returnContent = returnContent.replace(/^翻译/, '');
-        let content = translate(returnContent);
+        console.log(returnContent);
+        let content = await translate(returnContent);
+        console.log(content);
         return returnTextXml(resultXmlObj, content);
     } else {
         returnContent = '请回复1，2，3，翻译XXX，3?';
@@ -367,8 +369,9 @@ let translate = function (source, cb) {
                 } else {
                     console.log('翻译ok');
                     let trans_result = doc.trans_result;
+                    let src = trans_result[0].src;
                     let dst = trans_result[0].dst;
-                    resolve(dst);
+                    resolve(`${src}=>${dst}`);
                 }
             }
         })

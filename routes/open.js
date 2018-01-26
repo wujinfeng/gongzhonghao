@@ -56,9 +56,11 @@ router.post('/open', comm.reqData, function (req, res, next) {
         }
         let resultXmlObj = result.xml;
         if (resultXmlObj.MsgType === MESSAGE_TEXT) {
-            let returnXMl = wxUtil.messageText(resultXmlObj);
-            console.log(returnXMl);
-            res.send(returnXMl);
+            (async function () {
+                let returnXMl = await wxUtil.messageText(resultXmlObj);
+                console.log(returnXMl);
+                res.send(returnXMl);
+            })()
         } else if (resultXmlObj.MsgType === MESSAGE_EVENT) {
             let eventType = resultXmlObj.Event;
             if (eventType === MESSAGE_EVENT_SUBSCRIBE) {
